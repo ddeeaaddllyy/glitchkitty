@@ -1,7 +1,6 @@
 import asyncio
 from taskmanagerDetector import if_taskmgr_open
 from telegrambot import main
-from getusersystem import get_system_info
 
 
 async def mainActivity():
@@ -9,9 +8,12 @@ async def mainActivity():
 
     await asyncio.gather(
         if_taskmgr_open(),
-        main()
+        main(),
     )
 
 
 if __name__ == '__main__':
-    asyncio.run(mainActivity())
+    try:
+        asyncio.run(mainActivity())
+    except KeyboardInterrupt:
+        print('bye bye =)')
