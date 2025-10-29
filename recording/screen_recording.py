@@ -43,7 +43,6 @@ def record_screen(filename: str, duration: int, fps: int) -> tuple[bool, str]:
             out.release()
 
             if frames_recorded > 0:
-                print(f"Запись завершена. Записано кадров: {frames_recorded}")
                 return True, ""
             else:
                 return False, "Не записано ни одного кадра."
