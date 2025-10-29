@@ -8,7 +8,6 @@ FOURCC = cv2.VideoWriter_fourcc(*'mp4v')
 
 
 def record_screen(filename: str, duration: int, fps: int) -> tuple[bool, str]:
-
     try:
         with mss.mss() as sct:
 
@@ -39,7 +38,6 @@ def record_screen(filename: str, duration: int, fps: int) -> tuple[bool, str]:
                 expected_time = frames_recorded / fps
                 time_to_wait = expected_time - time_passed
                 if time_to_wait > 0:
-
                     time.sleep(time_to_wait)
 
             out.release()
