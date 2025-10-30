@@ -1,6 +1,6 @@
 import asyncio
-from taskmanagerDetector import if_taskmgr_open
-from telegrambot import main
+from other_utilits.taskmanagerDetector import if_taskmgr_open
+from telegram.telegrambot import main
 
 
 async def mainActivity():
@@ -13,7 +13,4 @@ async def mainActivity():
 
 
 if __name__ == '__main__':
-    try:
-        asyncio.run(mainActivity())
-    except KeyboardInterrupt:
-        print('bye bye =)')
+    asyncio.run(mainActivity())
