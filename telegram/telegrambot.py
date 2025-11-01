@@ -39,7 +39,7 @@ async def main():
         output_photo = FSInputFile(SCREEN_PATH)
 
         await message.answer_photo(photo=output_photo,
-                                   textwrap=str(get_system_info()))
+                                   caption=str(get_system_info()))
         os.remove(SCREEN_PATH)
 
     @dp.message(Command('002'))
@@ -145,7 +145,7 @@ async def main():
     @dp.message(Command('005'))
     @dp.message(Command('audioView'))
     async def recording_audio(message: types.Message):
-        """Принимает аргумент времени: /000 <sec>"""
+        """Принимает аргумент времени: /005 <sec>"""
         chat_id = message.chat.id
         duration = DEFAULT_DURATION_SEC
 
